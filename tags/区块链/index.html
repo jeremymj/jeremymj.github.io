@@ -29,7 +29,7 @@
     sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
     copycode: {"enable":false,"show_result":false,"style":null},
     back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
-    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
     fancybox: false,
     mediumzoom: false,
     lazyload: false,
@@ -48,12 +48,10 @@
   };
 </script>
 
-  <meta name="description" content="曦阳的博客">
-<meta property="og:type" content="website">
+  <meta property="og:type" content="website">
 <meta property="og:title" content="Ming&#39;s Blog">
 <meta property="og:url" content="https://www.jspace.top/tags/%E5%8C%BA%E5%9D%97%E9%93%BE/index.html">
 <meta property="og:site_name" content="Ming&#39;s Blog">
-<meta property="og:description" content="曦阳的博客">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="Ming">
 <meta name="twitter:card" content="summary">
@@ -201,6 +199,7 @@
     <span>0%</span>
   </div>
   <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
 
 
     <main class="main">
@@ -330,8 +329,10 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ming"
+      src="/images/avatar.jpg">
   <p class="site-author-name" itemprop="name">Ming</p>
-  <div class="site-description" itemprop="description">曦阳的博客</div>
+  <div class="site-description" itemprop="description"></div>
 </div>
 <div class="site-state-wrap motion-element">
   <nav class="site-state">
@@ -449,6 +450,8 @@
 
 
 <script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
 
 
 
