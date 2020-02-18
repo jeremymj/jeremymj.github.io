@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-material.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://www.jspace.top').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.7.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="由于远程开发需要部署一台测试服务器，在服务器上运行substrate实例后，接着需要部署测试合约，供同事调试使用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="编译出现clear_on_drop错误的解决过程">
+<meta property="og:url" content="https://www.jspace.top/archives/1c5692ea.html">
+<meta property="og:site_name" content="Ming&#39;s Blog">
+<meta property="og:description" content="由于远程开发需要部署一台测试服务器，在服务器上运行substrate实例后，接着需要部署测试合约，供同事调试使用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-02-18T21:57:18.000Z">
+<meta property="article:modified_time" content="2020-02-18T14:53:14.279Z">
+<meta property="article:author" content="Ming">
+<meta property="article:tag" content="substrate">
+<meta property="article:tag" content="智能合约">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.jspace.top/archives/1c5692ea.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>编译出现clear_on_drop错误的解决过程 | Ming's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?53e50b485301fdfbe38ea0a50f2a1db8";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Ming's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">always coding</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">3</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">0</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">2</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.jspace.top/archives/1c5692ea.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Ming">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ming's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          编译出现clear_on_drop错误的解决过程
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-18 21:57:18 / 修改时间：14:53:14" itemprop="dateCreated datePublished" datetime="2020-02-18T21:57:18Z">2020-02-18</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>　　由于远程开发需要部署一台测试服务器，在服务器上运行substrate实例后，接着需要部署测试合约，供同事调试使用。<a id="more"></a></p>
+<h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>　　从github上取回节前提交的代码，开始使用<code>cargo contract build</code>编译。在编译的过程中出现问题依赖文件不存在的的错误，出于以前调试substrate合约的经验，估计是依赖源码升级造成的。习惯性的先升级合约编译工具cargo-contract,从0.1.1升级到0.3.0，升级后继续编译，继续提示依赖的源码在依赖库不存在，这下反应过来了，他们最近又是大升级，变化比较大。刚开始还想把依赖项改成最新版的，经过一番尝试后，发现短时间内改不好，只有放弃。最后才想到在依赖库中指定提交的版本（增加rev+提交版本号），同时把使用的cargo-contract编译工具也还原到0.1.1版本，接着再编译修改后的合约项目，出现如下错误提示：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">error: failed to run custom build <span class="built_in">command</span> <span class="keyword">for</span> `clear_on_drop v0.2.3`</span><br><span class="line"></span><br><span class="line">Caused by:</span><br><span class="line">  process didn<span class="string">'t exit successfully: `/home/ming/work/temp/diamond/target/release/build/clear_on_drop-b2b3a807da34adf1/build-script-build` (exit code: 1)</span></span><br><span class="line"><span class="string">--- stdout</span></span><br><span class="line"><span class="string">TARGET = Some("wasm32-unknown-unknown")</span></span><br><span class="line"><span class="string">OPT_LEVEL = Some("z")</span></span><br><span class="line"><span class="string">HOST = Some("x86_64-unknown-linux-gnu")</span></span><br><span class="line"><span class="string">CC_wasm32-unknown-unknown = None</span></span><br><span class="line"><span class="string">CC_wasm32_unknown_unknown = None</span></span><br><span class="line"><span class="string">TARGET_CC = None</span></span><br><span class="line"><span class="string">CC = None</span></span><br><span class="line"><span class="string">CFLAGS_wasm32-unknown-unknown = None</span></span><br><span class="line"><span class="string">CFLAGS_wasm32_unknown_unknown = None</span></span><br><span class="line"><span class="string">TARGET_CFLAGS = None</span></span><br><span class="line"><span class="string">CFLAGS = None</span></span><br><span class="line"><span class="string">CRATE_CC_NO_DEFAULTS = None</span></span><br><span class="line"><span class="string">DEBUG = Some("false")</span></span><br><span class="line"><span class="string">running: "clang" "-Oz" "-ffunction-sections" "-fdata-sections" "-fPIC" "--target=wasm32-unknown-unknown" "-Wall" "-Wextra" "-o" "/home/ming/work/temp/diamond/target/wasm32-unknown-unknown/release/build/clear_on_drop-c7f1c48f1d7a25a0/out/src/hide.o" "-c" "src/hide.c"</span></span><br><span class="line"><span class="string">cargo:warning=error: unable to create target: '</span>No available targets are compatible with this triple.<span class="string">'</span></span><br><span class="line"><span class="string">cargo:warning=1 error generated.</span></span><br><span class="line"><span class="string">exit code: 1</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">--- stderr</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">error occurred: Command "clang" "-Oz" "-ffunction-sections" "-fdata-sections" "-fPIC" "--target=wasm32-unknown-unknown" "-Wall" "-Wextra" "-o" "/home/ming/work/temp/diamond/target/wasm32-unknown-unknown/release/build/clear_on_drop-c7f1c48f1d7a25a0/out/src/hide.o" "-c" "src/hide.c" with args "clang" did not execute successfully (status code exit code: 1).</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">warning: build failed, waiting for other jobs to finish...</span></span><br><span class="line"><span class="string">error: build failed</span></span><br><span class="line"><span class="string">error: Build failed</span></span><br></pre></td></tr></table></figure>
+<p>看到这个错误，印象中是跟依赖库中<code>sp-core</code>、<code>sp-io</code> 是否使用 <code>std</code> features 相关，于是把这两个依赖项中的features取消掉，去掉后编译，出现错误：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">error[E0152]: found duplicate lang item `panic_impl`</span><br><span class="line">   --&gt; /home/ming/.cargo/git/checkouts/substrate-<span class="number">7e08433</span>d4c370a21/b443dda/primitives/io/src/lib.rs:<span class="number">864</span>:<span class="number">1</span></span><br><span class="line">    |</span><br><span class="line"><span class="number">864</span> | / <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">panic</span></span>(info: &amp;core::panic::PanicInfo) -&gt; ! &#123;</span><br><span class="line"><span class="number">865</span> | |     <span class="keyword">unsafe</span> &#123;</span><br><span class="line"><span class="number">866</span> | |         <span class="keyword">let</span> message = sp_std::alloc::<span class="built_in">format!</span>(<span class="string">"&#123;&#125;"</span>, info);</span><br><span class="line"><span class="number">867</span> | |         logging::log(LogLevel::Error, <span class="string">"runtime"</span>, message.as_bytes());</span><br><span class="line"><span class="number">868</span> | |         core::intrinsics::abort()</span><br><span class="line"><span class="number">869</span> | |     &#125;</span><br><span class="line"><span class="number">870</span> | | &#125;</span><br><span class="line">    | |_^</span><br><span class="line">    |</span><br><span class="line">    = note: the lang item is first defined <span class="keyword">in</span> <span class="keyword">crate</span> `std` (which `parity_scale_codec` depends on)</span><br><span class="line"></span><br><span class="line">error[E0152]: found duplicate lang item `oom`</span><br><span class="line">   --&gt; /home/ming/.cargo/git/checkouts/substrate-<span class="number">7e08433</span>d4c370a21/b443dda/primitives/io/src/lib.rs:<span class="number">875</span>:<span class="number">1</span></span><br><span class="line">    |</span><br><span class="line"><span class="number">875</span> | / <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">oom</span></span>(_: core::alloc::Layout) -&gt; ! &#123;</span><br><span class="line"><span class="number">876</span> | |     <span class="keyword">unsafe</span> &#123;</span><br><span class="line"><span class="number">877</span> | |         logging::log(LogLevel::Error, <span class="string">"runtime"</span>, <span class="string">b"Runtime memory exhausted. Aborting"</span>);</span><br><span class="line"><span class="number">878</span> | |         core::intrinsics::abort();</span><br><span class="line"><span class="number">879</span> | |     &#125;</span><br><span class="line"><span class="number">880</span> | | &#125;</span><br><span class="line">    | |_^</span><br><span class="line">    |</span><br><span class="line">    = note: the lang item is first defined <span class="keyword">in</span> <span class="keyword">crate</span> `std` (which `parity_scale_codec` depends on)</span><br><span class="line"></span><br><span class="line">error: aborting due to <span class="number">2</span> previous errors</span><br><span class="line"></span><br><span class="line">For more information about this error, <span class="keyword">try</span> `rustc --explain E0152`.</span><br><span class="line">error: could not compile `sp-io`.</span><br><span class="line"></span><br><span class="line">Caused by:</span><br><span class="line">  process didn<span class="symbol">'t</span> exit successfully: `rustc --<span class="keyword">crate</span>-name sp_io --edition=<span class="number">2018</span> /home/ming/.cargo/git/checkouts/substrate-<span class="number">7e08433</span>d4c370a21/b443dda/primitives/io/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi --<span class="keyword">crate</span>-<span class="class"><span class="keyword">type</span> <span class="title">lib</span></span> --emit=dep-info,metadata,link -C opt-level=z -C panic=abort -C overflow-checks=on -C metadata=<span class="number">1603</span>ab4b0f5657bd -C extra-filename=-<span class="number">1603</span>ab4b0f5657bd --out-dir /home/ming/work/temp/envtest/diamond/contract/diamond/target/wasm32-unknown-unknown/release/deps --target wasm32-unknown-unknown -L dependency=/home/ming/work/temp/envtest/diamond/contract/diamond/target/wasm32-unknown-unknown/release/deps -L dependency=/home/ming/work/temp/envtest/diamond/contract/diamond/target/release/deps --<span class="keyword">extern</span> hash_db=/home/ming/work/temp/envtest/diamond/contract/diamond/target/wasm32-unknown-unknown/release/deps/libhash_db-<span class="number">2</span>a1247b66dab3f2e.rmeta --<span class="keyword">extern</span> codec=/home/ming/work/temp/envtest/diamond/contract/diamond/target/wasm32-unknown-unknown/release/deps/libparity_scale_codec-<span class="number">97</span>d1d02b4b85917a.rmeta --<span class="keyword">extern</span> sp_core=/home/ming/work/temp/envtest/diamond/contract/diamond/target/wasm32-unknown-unknown/release/deps/libsp_core-ab9564e391d6b38c.rmeta --<span class="keyword">extern</span> sp_runtime_interface=/home/ming/work/temp/envtest/diamond/contract/diamond/target/wasm32-unknown-unknown/release/deps/libsp_runtime_interface-<span class="number">2</span>c02a210bd05a2c8.rmeta --<span class="keyword">extern</span> sp_std=/home/ming/work/temp/envtest/diamond/contract/diamond/target/wasm32-unknown-unknown/release/deps/libsp_std-e4cf72917021ed6f.rmeta --cap-lints allow -C <span class="symbol">'link</span>-args=-z stack-size=<span class="number">65536</span> --import-memory'` (exit code: <span class="number">1</span>)</span><br><span class="line">warning: build failed, waiting <span class="keyword">for</span> other jobs to finish...</span><br><span class="line">error: build failed</span><br><span class="line">error: Build failed</span><br></pre></td></tr></table></figure>
+<p>看到这个错误，知道不是依赖项features的原因，毕竟以前是调试通过的，接着又到github上查看clear_on_drop项目相关issue,发现有人问了类似的问题，从回复</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">According to the error message, the issue is that your C compiler (in this case, clang) does not know the wasm32-unknown-unknown target. That is not something which could be fixed by this crate.</span><br></pre></td></tr></table></figure>
+<p>里面提到可能是clang的原因，一直到这里我都还没有反应过来问题出在哪里。在继续折腾一番后，鉴于到了该洗漱睡觉的时间了，就想到明天再弄吧。在洗漱的过程中想起以前在公司调试的时候也是出现过类似的问题，也花了很长时间都没有排查出来原因，因为在同事的电脑上能够正常编译，所以排除了代码出错，猜测大概率是编译环境的原因，同事使用的是ubuntu 19.10,我使用的是18.04，最后是直接重新安装系统解决这个编译问题（之前就对当前的系统不满意，算是一次性全部把这些问题解决吧）。接着查看家里电脑的系统版本号，居然还是ubuntu 18.04(印象中重装过一次系统)，看到这个版本号后，心里面顿时轻松了些，知道这个问题可以怎么解决了。给我的选择是重装系统（肯定会解决问题）还是尝试先升级<code>llvm</code>、<code>clang</code>版本(不一定能够解决这个问题)。最后还是想尝试升级<code>clang</code>版本号，毕竟家里面的电脑各种开发环境、工具折腾起来需要费不少精力。</p>
+<h2 id="升级clang"><a href="#升级clang" class="headerlink" title="升级clang"></a>升级clang</h2><p>　　在网上查看一下<code>llvm</code>相关介绍后，了解这个属于编译系统比较底层的工具库，里面包含很多系统编译需要的工具，使用命令<code>clang --version</code>查看了当前的clang版本为6.0，跟github上llvm 的10.0 bate版本差距已经比较大了。编译llvm的过程并不顺利，在生成Makefile过程中没有添加参数，造成后续编译过程很慢，耗时很长，最后也没有编译完全（没有耐心等下去了）。在短暂的放弃后，最后按照<a href="https://clang.llvm.org/get_started.html" target="_blank" rel="noopener">帮助文档</a>设置编译条件<code>cmake -DLLVM_ENABLE_PROJECTS=clang -G &quot;Unix Makefiles&quot; ../llvm</code>，在Makefile生成完后使用<code>make -j8</code>很快的就编译结束，最后使用<code>sudo make install</code>,使用<code>clang --version</code> 查看了最新版本为11.0.0,完成了clang升级。</p>
+<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2><p>　　在clang 升级后，使用<code>cargo clean</code>将合约项目所有的以前编译的结果全部清除掉，使用<code>cargo contract build</code>重新编译合约，在经过几分钟的紧张时间后，看到wasm文件正确的编译出来了，心里面顿时轻松了，最后使用<code>cargo contract generate-metadata</code>编译合约ABI文件(metadata.json)，算是把折腾一天的问题给解决了。同时算是把系统编译环境做了一次更新，以后在编译中不会出现类似错误。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>在以后的开发中，若存在需要直接引用github上的项目源码，需要加上版本号，使用<code>branch</code>、<code>tag</code>、<code>rev</code>等字段；</li>
+<li>在安装三方库的时候，查看官方文档时要仔细，把里面提到的注意事项读完。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/substrate/" rel="tag"># substrate</a>
+              <a href="/tags/%E6%99%BA%E8%83%BD%E5%90%88%E7%BA%A6/" rel="tag"># 智能合约</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/archives/b7d807be.html" rel="prev" title="使用github搭建自己的blog">
+      <i class="fa fa-chevron-left"></i> 使用github搭建自己的blog
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题描述"><span class="nav-number">1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#升级clang"><span class="nav-number">2.</span> <span class="nav-text">升级clang</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#验证"><span class="nav-number">3.</span> <span class="nav-text">验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ming"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ming</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/jeremymj" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;jeremymj" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:jm140915@hotmail.com" title="E-Mail → mailto:jm140915@hotmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ming</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">10k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">9 分钟</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
